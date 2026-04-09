@@ -90,8 +90,10 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`
+// Only start server locally (not on Vercel)
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║                                                   ║
 ║   🍰 Dear Desserts API Server                     ║
@@ -100,13 +102,15 @@ server.listen(PORT, () => {
 ║   Environment: ${process.env.NODE_ENV || 'development'}                   ║
 ║                                                   ║
 ╚═══════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err.message);
-  server.close(() => process.exit(1));
-});
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err.message);
+    server.close(() => process.exit(1));
+  });
+}
 
-module.exports = { app, server, io };
+// Export Express app for Vercel serverless
+module.exports = app;
