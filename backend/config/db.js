@@ -1,17 +1,17 @@
 const mongoose = require('mongoose');
 
 let isConnected = false;
+let connectionAttempt = null;
 
 const connectDB = async () => {
   // If already connected, reuse connection
-  if (isConnected) {
+  if (isConnected && mongoose.connection.readyState === 1) {
     return;
   }
 
   // If connection is in progress, wait for it
-  if (mongoose.connection.readyState === 1) {
-    isConnected = true;
-    return;
+  if (connectionAttempt) {
+    return connectionAttempt;
   }
 
   try {
@@ -19,12 +19,19 @@ const connectDB = async () => {
       throw new Error('MONGODB_URI environment variable is not set');
     }
 
-    await mongoose.connect(process.env.MONGODB_URI);
+    // Start connection attempt
+    connectionAttempt = mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+
+    await connectionAttempt;
     isConnected = true;
+    connectionAttempt = null;
     console.log(`MongoDB Connected: ${mongoose.connection.host}`);
   } catch (error) {
+    connectionAttempt = null;
     console.error('MongoDB connection error:', error.message);
-    // Don't exit in serverless - just throw error
     throw error;
   }
 };
