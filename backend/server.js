@@ -1,7 +1,11 @@
 require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
+const connectDB = require('./config/db');
 const app = require('./config/app');
+
+// Connect to database for local development
+connectDB();
 
 const server = http.createServer(app);
 
@@ -24,18 +28,15 @@ app.use((req, res, next) => {
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
-  // Join admin room for notifications
   socket.on('joinAdmin', () => {
     socket.join('admin');
     console.log('Admin joined:', socket.id);
   });
 
-  // Handle order status updates
   socket.on('updateOrderStatus', (data) => {
     io.emit('orderUpdated', data);
   });
 
-  // Handle disconnect
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });

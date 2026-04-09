@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const connectDB = require('./db');
 const errorHandler = require('../middleware/errorHandler');
 
 // Route imports
@@ -14,14 +13,11 @@ const settingsRoutes = require('../routes/settings');
 const notificationRoutes = require('../routes/notifications');
 const invoiceRoutes = require('../routes/invoice');
 
-// Connect to database
-connectDB();
-
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000'],
+  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000'],
   credentials: true
 }));
 app.use(express.json());
