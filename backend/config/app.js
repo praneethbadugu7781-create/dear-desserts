@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const connectDB = require('./db');
 const errorHandler = require('../middleware/errorHandler');
 
 // Route imports
@@ -25,6 +26,20 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Database connection middleware - connect on first request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection middleware error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database connection failed: ' + error.message
+    });
+  }
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
