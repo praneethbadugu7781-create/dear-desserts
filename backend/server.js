@@ -1,26 +1,8 @@
 require('dotenv').config();
-const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
-const path = require('path');
-const connectDB = require('./config/db');
-const errorHandler = require('./middleware/errorHandler');
+const app = require('./config/app');
 
-// Route imports
-const authRoutes = require('./routes/auth');
-const menuRoutes = require('./routes/menu');
-const orderRoutes = require('./routes/orders');
-const analyticsRoutes = require('./routes/analytics');
-const offerRoutes = require('./routes/offers');
-const settingsRoutes = require('./routes/settings');
-const notificationRoutes = require('./routes/notifications');
-const invoiceRoutes = require('./routes/invoice');
-
-// Connect to database
-connectDB();
-
-const app = express();
 const server = http.createServer(app);
 
 // Socket.io setup
@@ -37,35 +19,6 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
-
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/invoice', invoiceRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Dear Desserts API is running!' });
-});
-
-// Error handler
-app.use(errorHandler);
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
@@ -90,10 +43,8 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Only start server locally (not on Vercel)
-if (!process.env.VERCEL) {
-  server.listen(PORT, () => {
-    console.log(`
+server.listen(PORT, () => {
+  console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║                                                   ║
 ║   🍰 Dear Desserts API Server                     ║
@@ -102,15 +53,11 @@ if (!process.env.VERCEL) {
 ║   Environment: ${process.env.NODE_ENV || 'development'}                   ║
 ║                                                   ║
 ╚═══════════════════════════════════════════════════╝
-    `);
-  });
+  `);
+});
 
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Rejection:', err.message);
-    server.close(() => process.exit(1));
-  });
-}
-
-// Export Express app for Vercel serverless
-module.exports = app;
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err.message);
+  server.close(() => process.exit(1));
+});
